@@ -11,7 +11,6 @@ Deployment Scripts:
 
 Technological level with dApp
     SDK (Optional):
-
     contract interactions for the main functions of the contract
     view functions, where you’ve got additional formatting of the data (for example checks, BN conversions, and metadata parsing)
 
