@@ -5,20 +5,17 @@ import "./MarketItem.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "hardhat/console.sol";
 
-contract Marketplace is ReentrancyGuard {
+contract MarketPlace is ReentrancyGuard, Ownable {
     uint256 marketFee = 0.0000000000000001 ether;
 
     using Counters for Counters.Counter;
     Counters.Counter private _itemIds;
     Counters.Counter private _itemsSold;
     Counters.Counter private _collectionId;
-
-    
-
-    
 
     event NFTItemAction(
         uint256 indexed itemId,
@@ -32,9 +29,9 @@ contract Marketplace is ReentrancyGuard {
 
     event BidReceived(address bidder, uint256 amount);
 
-    struct Bidder{
+    struct Bidder {
         address payable bidder;
-        uint bid;
+        uint256 bid;
         NFTMarketItem nft;
     }
 
@@ -55,13 +52,41 @@ contract Marketplace is ReentrancyGuard {
         bool sold;
     }
 
-   
     mapping(uint256 => NFTMarketItem) private marketItems;
     mapping(uint256 => bool) private isPresent;
     mapping(uint256 => Collection) private collections;
     mapping(uint256 => uint256) private tokenIdToCollectionId;
     mapping(address => uint256) private pendingReturns;
-  
+
+     modifier isOwner(
+        address nftAddress,
+        uint256 tokenId,
+        address spender
+    ) {
+        IERC721 nft = IERC721(nftAddress);
+        address owner = nft.ownerOf(tokenId);
+        require(spender == owner, "Not token owner.");
+        _;
+    }
+
+
+    /////////// Market fee logic
+
+    function updateMarketFee(uint256 newMarketFee)
+        public
+        payable
+        onlyOwner
+    {
+        marketFee = newMarketFee;
+    }
+
+    function getMaketFee()
+        public
+        view
+        returns (uint256)
+    {
+        return marketFee;
+    }
     /////////// MarketItems logic
     function getMarketItemsCount() public view returns (uint256) {
         return _itemIds.current();
@@ -116,17 +141,7 @@ contract Marketplace is ReentrancyGuard {
         }
     }
 
-    modifier isOwner(
-        address nftAddress,
-        uint256 tokenId,
-        address spender
-    ) {
-        IERC721 nft = IERC721(nftAddress);
-        address owner = nft.ownerOf(tokenId);
-        require(spender == owner, "Not token owner.");
-        _;
-    }
-
+   
     function approve(
         address payable toBeApproved,
         address nftAddress,
@@ -141,7 +156,7 @@ contract Marketplace is ReentrancyGuard {
         public
         payable
         nonReentrant
-        // isOwner(nftContract, tokenId, msg.sender)
+    // isOwner(nftContract, tokenId, msg.sender)
     {
         _itemIds.increment();
         uint256 itemId = _itemIds.current();
@@ -226,9 +241,8 @@ contract Marketplace is ReentrancyGuard {
     }
 
     function makeABid(address nftContract, uint256 tokenId) public payable {
-
         addNFTItemToMarket(nftContract, tokenId);
-     
+
         if (msg.value != 0) {
             pendingReturns[msg.sender] = msg.value;
         }
@@ -237,23 +251,20 @@ contract Marketplace is ReentrancyGuard {
             payable(msg.sender),
             msg.value,
             marketItems[_itemIds.current()]
-
         );
 
         emit BidReceived(msg.sender, msg.value);
     }
 
     function acceptABit() public payable {
-
         ///////////// TODO need to think of the Accepted bid
         bidder.bidder.transfer(bidder.bid);
     }
 
     function refuseBit() public payable returns (bool) {
-
         ///////// TODO think on the logic here
 
-        uint amount = pendingReturns[msg.sender];
+        uint256 amount = pendingReturns[msg.sender];
         if (amount > 0) {
             // It is important to set this to zero because the recipient
             // can call this function again as part of the receiving call
@@ -268,6 +279,4 @@ contract Marketplace is ReentrancyGuard {
         }
         return true;
     }
-
-    
 }

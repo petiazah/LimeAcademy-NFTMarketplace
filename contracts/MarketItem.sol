@@ -8,12 +8,15 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract MarketItem is ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
+    
 
-    constructor() ERC721("MarketItem", "NFT") {}
+    event PetiazahMinted(uint256 indexed tokenId);
+
+
+    constructor() ERC721("Petiazah", "PLZ") {}
 
     function mintNFT(address recipient, string memory tokenURI)
         public
-        onlyOwner
         returns (uint256)
     {
         _tokenIds.increment();
@@ -21,7 +24,10 @@ contract MarketItem is ERC721URIStorage, Ownable {
         uint256 newItemId = _tokenIds.current();
         _mint(recipient, newItemId);
         _setTokenURI(newItemId, tokenURI);
-
+        emit PetiazahMinted(newItemId);
         return newItemId;
     }
+
+ 
+
 }
