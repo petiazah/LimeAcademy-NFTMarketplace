@@ -76,6 +76,13 @@ task("deploy-goerli", "Deploys contract on a provided network")
 });
 
 
+task("deploy-with-uriKey", "Deploys contract with provided uri")
+.addParam("uriURL", "Please provide the uriURL")
+.setAction(async ({uriURL}) => {
+    const deployNFTContract = require("./scripts/deploy-with-param");
+    await deployNFTContract(uriURL);
+});
+
 
 
 
