@@ -7,6 +7,22 @@ describe("NFTMarket", function () {
   const tokenURI_1 = "ipfs://QmUprsCe2pdn77mcfJWJZ1t84Y63yqaNq32tQoJB7hfMxK/"
   const tokenURI_2 = "ipfs://Qmd4QQPtbvaMtrV3U78xgY8hNuRMN4S3aPmugYzqikZSaF/"
 
+  interface NFTItem {
+    itemId: number;
+    collection: Collection;
+    nftContract: string;
+    tokenId: number;
+    seller: string;
+    owner: string;
+    price: number;
+    sold: boolean;
+  }
+
+  interface Collection {
+    name: string;
+    description: string;
+  }
+
   async function deployFixture() {
     const [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
@@ -26,16 +42,35 @@ describe("NFTMarket", function () {
   async function mintMarketItem() {
     const { marketItem, marketPlace, owner, addr1, addr2 } = await loadFixture(deployFixture);
     expect(await marketItem.balanceOf(owner.address)).to.equal(0);
-    await marketItem.connect(owner).mintNFT(tokenURI_1);
-    return { marketItem, marketPlace, owner, addr1, addr2 }
+    const tx = await marketItem.connect(owner).mintNFT(tokenURI_1);
+    const receipt = await tx.wait()
+    const tokenID = parseInt(receipt.logs[0].topics[3], 16)
+    return { marketItem, marketPlace, owner, addr1, addr2, tokenID }
   }
 
+  async function addItemToMarket() {
+    const { marketItem, marketPlace, owner, addr1, addr2, tokenID } = await loadFixture(mintMarketItem);
+
+    await marketPlace.connect(owner).createCollection("Dogs", "Dogs of the City");
+    await marketPlace.connect(owner).createCollection("Cats", "Cat of the City");
+    const dogCollection = await marketPlace.collections(1);
+    const catCollection = await marketPlace.collections(2);
+
+    await marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 1, dogCollection);
+    await marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 2, catCollection);
+
+    return { marketItem, marketPlace, owner, addr1, addr2 }
+
+  }
 
   it("NFT is minted successfully", async function () {
     const { marketItem, marketPlace, owner, addr1, addr2 } = await loadFixture(deployFixture);
     expect(await marketItem.balanceOf(owner.address)).to.equal(0);
     const tx = await marketItem.connect(owner).mintNFT(tokenURI_1);
+    const tokenID = await tx.wait()
+    console.log(parseInt(tokenID.logs[0].topics[3], 16));
     expect(await marketItem.balanceOf(owner.address)).to.equal(1);
+
   });
 
   it("tokenURI is set sucessfully", async function () {
@@ -49,29 +84,15 @@ describe("NFTMarket", function () {
 
   })
 
-  // it("NFT is approved", async function () {
-  //   const { marketItem, marketPlace, owner, addr1, addr2 } = await loadFixture(mintMarketItem)
-  //   const aprr = await marketItem.connect(addr1).approve(addr2.address, 1)
-  //   expect(await marketItem.getApproved(1)).to.equal(addr2.address);
-  // })
-
-  it("Should emit NFT", async function () {
-
-    const { marketItem, marketPlace, owner, addr1, addr2 } = await loadFixture(deployFixture);
-    await expect(marketItem.connect(owner).mintNFT(tokenURI_1))
-      .to.emit(marketItem, "NewNFTMinted")
-      .withArgs(1);
-  });
-
-  it("Update market fee",async function () {
+  it("Update market fee", async function () {
     const { marketItem, marketPlace, owner, addr1, addr2 } = await loadFixture(deployFixture);
     const tx1 = await marketPlace.connect(owner).updateMarketFee(100);
     const fee = await marketPlace.marketFee();
     assert.equal(fee.toNumber(), 100);
   });
 
-  it("Create collection",async function () {
-    const { marketItem, marketPlace, owner, addr1, addr2 } = await loadFixture(deployFixture);
+  it("Create collection", async function () {
+    const { marketItem, marketPlace, owner, } = await loadFixture(deployFixture);
     const tx1 = await marketPlace.connect(owner).createCollection("Dogs", "Dogs of the City");
     const collCount = await marketPlace.getCollectionsCount();
     assert.equal(collCount.toNumber(), 1);
@@ -79,18 +100,61 @@ describe("NFTMarket", function () {
     assert.equal(collection.name, "Dogs");
   });
 
-  it("NFT added to market",async function () {
-    const { marketItem, marketPlace, owner, addr1, addr2 } = await loadFixture(mintMarketItem);
+  it("Add NFT to market", async function () {
+    const { marketItem, marketPlace, owner, addr1, addr2, tokenID } = await loadFixture(mintMarketItem);
+
     await marketPlace.connect(owner).createCollection("Dogs", "Dogs of the City");
-    const collection = await marketPlace.collections(1);
-    await marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 1, collection);
-    console.log(marketPlace.marketItems(1));
-  
-    // await expect( await marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 1, collection))
-    //   .to.emit(marketPlace, "NFTItemAction")
-    //   .withArgs(marketPlace.marketItems(1));
-    
+    await marketPlace.connect(owner).createCollection("Cats", "Cat of the City");
+    const dogCollection = await marketPlace.collections(1);
+    const catCollection = await marketPlace.collections(2);
+
+    await marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 1, dogCollection);
+    await marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 2, catCollection);
+    const itemId = await marketPlace.getMarketItemsCount();
+    assert.equal(itemId, 2);
+
+    await expect(marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 1, catCollection))
+      .to.be.revertedWith('NFT already exists on the market!');
+
+  });
+
+  it("List NFT to market", async function () {
+    const { marketItem, marketPlace, owner, addr1, addr2 } = await addItemToMarket();
+
+    const result: NFTItem = await marketPlace.getMarketItems(1);
+    console.log(result.toString())
+
+    let listingPrice = await marketPlace.marketFee()
+    listingPrice = listingPrice.toString()
+    console.log(listingPrice)
+
+
+    console.log("Approving Marketplace as operator of NFT...")
+    const approvalTx = await marketItem
+      .connect(owner)
+      .approve(marketPlace.address, result.tokenId)
+    await approvalTx.wait(1)
+
+
+    await expect(marketPlace.connect(owner).listNFTItemToMarket(result.itemId, result.nftContract, 20, 10, { value: listingPrice }))
+      .to.be.revertedWith('ERC721: invalid token ID');
+
+    await expect(marketPlace.connect(owner).listNFTItemToMarket(result.itemId, result.nftContract, result.tokenId, 0, { value: listingPrice }))
+      .to.be.revertedWith('Price should be more than 0 PLZ.');
+
+    await expect(marketPlace.connect(owner).listNFTItemToMarket(result.itemId, result.nftContract, result.tokenId, 10, { value: 0 }))
+      .to.be.revertedWith('Need to pay market fee.');
+
+    await expect(marketPlace.connect(owner).listNFTItemToMarket(result.itemId, result.nftContract, result.tokenId, 10, { value: listingPrice }))
+      .to.emit(marketPlace, "NFTItemAction");
+
+    const resultListed: NFTItem = await marketPlace.getMarketItems(1);
+    console.log(resultListed.toString())
+
+    assert.equal(resultListed.owner, marketPlace.address);
   });
 
 
 })
+
+

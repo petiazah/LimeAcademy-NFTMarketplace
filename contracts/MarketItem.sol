@@ -8,10 +8,6 @@ contract MarketItem is ERC721URIStorage {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     
-
-    event NewNFTMinted(uint256 indexed tokenId);
-
-
     constructor() ERC721("Petiazah", "PLZ") {}
 
     function mintNFT(string memory tokenURI)
@@ -22,10 +18,6 @@ contract MarketItem is ERC721URIStorage {
         uint256 newItemId = _tokenIds.current();
         _mint(msg.sender, newItemId);
         _setTokenURI(newItemId, tokenURI);
-        emit NewNFTMinted(newItemId);
         return newItemId;
     }
-
- 
-
 }
