@@ -48,6 +48,9 @@ const config: HardhatUserConfig = {
       chainId: 5,
     },
   
+  },
+  mocha: {
+    timeout: 40000
   }
 }
 

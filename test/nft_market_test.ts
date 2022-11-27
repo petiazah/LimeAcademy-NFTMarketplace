@@ -6,6 +6,8 @@ describe("NFTMarket", function () {
 
   const tokenURI_1 = "ipfs://QmUprsCe2pdn77mcfJWJZ1t84Y63yqaNq32tQoJB7hfMxK/"
   const tokenURI_2 = "ipfs://Qmd4QQPtbvaMtrV3U78xgY8hNuRMN4S3aPmugYzqikZSaF/"
+  const auctionPrice = ethers.utils.parseEther('3')
+  console.log(auctionPrice);
 
   interface NFTItem {
     itemId: number;
@@ -67,7 +69,7 @@ describe("NFTMarket", function () {
     const { marketItem, marketPlace, owner, addr1, addr2 } = await loadFixture(deployFixture);
     expect(await marketItem.balanceOf(owner.address)).to.equal(0);
     const tx = await marketItem.connect(owner).mintNFT(tokenURI_1);
-    const tokenID = await tx.wait()
+    const tokenID = await tx.wait(1)
     console.log(parseInt(tokenID.logs[0].topics[3], 16));
     expect(await marketItem.balanceOf(owner.address)).to.equal(1);
 
@@ -109,9 +111,11 @@ describe("NFTMarket", function () {
     const catCollection = await marketPlace.collections(2);
 
     await marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 1, dogCollection);
-    await marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 2, catCollection);
     const itemId = await marketPlace.getMarketItemsCount();
-    assert.equal(itemId, 2);
+    assert.equal(itemId, 1);
+
+    await expect(marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 2, dogCollection))
+      .to.emit(marketPlace, "NFTItemAction");
 
     await expect(marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 1, catCollection))
       .to.be.revertedWith('NFT already exists on the market!');
@@ -136,23 +140,77 @@ describe("NFTMarket", function () {
     await approvalTx.wait(1)
 
 
-    await expect(marketPlace.connect(owner).listNFTItemToMarket(result.itemId, result.nftContract, 20, 10, { value: listingPrice }))
+    await expect(marketPlace.connect(owner).listNFTItemToMarket(result.itemId, result.nftContract, 20, auctionPrice, { value: listingPrice }))
       .to.be.revertedWith('ERC721: invalid token ID');
 
     await expect(marketPlace.connect(owner).listNFTItemToMarket(result.itemId, result.nftContract, result.tokenId, 0, { value: listingPrice }))
       .to.be.revertedWith('Price should be more than 0 PLZ.');
 
-    await expect(marketPlace.connect(owner).listNFTItemToMarket(result.itemId, result.nftContract, result.tokenId, 10, { value: 0 }))
+    await expect(marketPlace.connect(owner).listNFTItemToMarket(result.itemId, result.nftContract, result.tokenId, auctionPrice, { value: 0 }))
       .to.be.revertedWith('Need to pay market fee.');
 
-    await expect(marketPlace.connect(owner).listNFTItemToMarket(result.itemId, result.nftContract, result.tokenId, 10, { value: listingPrice }))
+    await expect(marketPlace.connect(owner).listNFTItemToMarket(result.itemId, result.nftContract, result.tokenId, auctionPrice, { value: listingPrice }))
       .to.emit(marketPlace, "NFTItemAction");
 
     const resultListed: NFTItem = await marketPlace.getMarketItems(1);
     console.log(resultListed.toString())
 
     assert.equal(resultListed.owner, marketPlace.address);
+    assert.equal(resultListed.price, auctionPrice.toNumber());
+
+    ///////////////////////////////////////////////////////////////
+
+    await expect(marketPlace.MarketSaleNFT(result.itemId, { value: 10 }))
+      .to.be.revertedWith('Please provide appropriate price');
+
+    await expect(marketPlace.MarketSaleNFT(result.itemId))
+      .to.be.revertedWith('Please provide appropriate price');
+
+    const price = ethers.utils.parseEther("3.0")
+    const sellTx = await marketPlace.MarketSaleNFT(result.itemId, {value: price});
+    await sellTx;
+
+    // await expect(marketPlace.MarketSaleNFT(result.itemId, {value: auctionPrice}))
+    //   .to.emit(marketPlace, "NFTItemAction");
+
+    // const resultSell: NFTItem = await marketPlace.getMarketItems(1);
+    //   console.log(resultSell.toString())
+  
+
   });
+
+  // it("Make a sell", async function () {
+  //     const { marketItem, marketPlace, owner, addr1, addr2 } = await addItemToMarket();
+
+  //   const result: NFTItem = await marketPlace.getMarketItems(1);
+
+  //   let listingPrice = await marketPlace.marketFee()
+  //   listingPrice = listingPrice.toString()
+  //   console.log(listingPrice)
+
+
+  //   console.log("Approving Marketplace as operator of NFT...")
+  //   const approvalTx = await marketItem
+  //     .connect(owner)
+  //     .approve(marketPlace.address, result.tokenId)
+      
+  //   await approvalTx.wait(1)
+
+  //   await expect(marketPlace.MarketSaleNFT(result.itemId))
+  //     .to.be.revertedWith('Please provide appropriate price');
+
+  //   const resultListed: NFTItem = await marketPlace.getMarketItems(1);
+  //   console.log(resultListed.owner)
+  //   console.log(marketPlace.address)
+
+
+  //   // await expect(marketPlace.connect(owner).MarketSaleNFT(result.itemId))
+  //   //   .to.be.revertedWith('Sender is not an owner');
+
+  //   // await expect(marketPlace.MarketSaleNFT(result.itemId))
+  //   //   .to.be.revertedWith('Please provide appropriate price');
+
+  // });
 
 
 })
