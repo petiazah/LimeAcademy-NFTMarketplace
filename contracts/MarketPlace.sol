@@ -131,6 +131,7 @@ contract MarketPlace is ReentrancyGuard, Ownable {
         address ownerOfToken = nft.ownerOf(tokenId);
         address appr = nft.getApproved(tokenId);
         console.log("ownerOfToken: %s",ownerOfToken);
+        console.log("address(this): %s",address(this));
         console.log("current appr: %s",appr);
 
         if (nft.getApproved(tokenId) != address(this)) {

@@ -159,7 +159,7 @@ describe("NFTMarket", function () {
     assert.equal(resultListed.owner, marketPlace.address);
     assert.equal(resultListed.price.toString(), auctionPrice);
 
-    ///////////////////////////////////////////////////////////////
+    ////////////////// Make a sell  ////////////////////////////
 
     await expect(marketPlace.MarketSaleNFT(result.itemId, { value: "10" }))
       .to.be.revertedWith('Please provide appropriate price');
