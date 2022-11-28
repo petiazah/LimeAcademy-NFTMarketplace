@@ -1,12 +1,13 @@
 import { expect, assert } from "chai";
 import { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+const { BigNumber } = require("@ethersproject/bignumber");
 
 describe("NFTMarket", function () {
 
   const tokenURI_1 = "ipfs://QmUprsCe2pdn77mcfJWJZ1t84Y63yqaNq32tQoJB7hfMxK/"
   const tokenURI_2 = "ipfs://Qmd4QQPtbvaMtrV3U78xgY8hNuRMN4S3aPmugYzqikZSaF/"
-  const auctionPrice = ethers.utils.parseEther('3')
+  const auctionPrice = "3" //ethers.utils.parseUnits("3", 'wei')
   console.log(auctionPrice);
 
   interface NFTItem {
@@ -125,7 +126,7 @@ describe("NFTMarket", function () {
   it("List NFT to market", async function () {
     const { marketItem, marketPlace, owner, addr1, addr2 } = await addItemToMarket();
 
-    const result: NFTItem = await marketPlace.getMarketItems(1);
+    const result: NFTItem = await marketPlace.getMarketItem(1);
     console.log(result.toString())
 
     let listingPrice = await marketPlace.marketFee()
@@ -133,11 +134,11 @@ describe("NFTMarket", function () {
     console.log(listingPrice)
 
 
-    console.log("Approving Marketplace as operator of NFT...")
-    const approvalTx = await marketItem
-      .connect(owner)
-      .approve(marketPlace.address, result.tokenId)
-    await approvalTx.wait(1)
+    // console.log("Approving Marketplace as operator of NFT...")
+    // const approvalTx = await marketItem
+    //   .connect(owner)
+    //   .approve(marketPlace.address, result.tokenId)
+    // await approvalTx.wait(1)
 
 
     await expect(marketPlace.connect(owner).listNFTItemToMarket(result.itemId, result.nftContract, 20, auctionPrice, { value: listingPrice }))
@@ -152,28 +153,27 @@ describe("NFTMarket", function () {
     await expect(marketPlace.connect(owner).listNFTItemToMarket(result.itemId, result.nftContract, result.tokenId, auctionPrice, { value: listingPrice }))
       .to.emit(marketPlace, "NFTItemAction");
 
-    const resultListed: NFTItem = await marketPlace.getMarketItems(1);
+    const resultListed: NFTItem = await marketPlace.getMarketItem(1);
     console.log(resultListed.toString())
 
     assert.equal(resultListed.owner, marketPlace.address);
-    assert.equal(resultListed.price, auctionPrice.toNumber());
+    assert.equal(resultListed.price.toString(), auctionPrice);
 
     ///////////////////////////////////////////////////////////////
 
-    await expect(marketPlace.MarketSaleNFT(result.itemId, { value: 10 }))
+    await expect(marketPlace.MarketSaleNFT(result.itemId, { value: "10" }))
       .to.be.revertedWith('Please provide appropriate price');
 
     await expect(marketPlace.MarketSaleNFT(result.itemId))
       .to.be.revertedWith('Please provide appropriate price');
 
-    const price = ethers.utils.parseEther("3.0")
-    const sellTx = await marketPlace.MarketSaleNFT(result.itemId, {value: price});
-    await sellTx;
+    // const sellTx = await marketPlace.MarketSaleNFT(result.itemId, {value: auctionPrice});
+    // await sellTx;
 
-    // await expect(marketPlace.MarketSaleNFT(result.itemId, {value: auctionPrice}))
-    //   .to.emit(marketPlace, "NFTItemAction");
+    await expect(marketPlace.MarketSaleNFT(result.itemId, {value: auctionPrice}))
+      .to.emit(marketPlace, "NFTItemAction");
 
-    // const resultSell: NFTItem = await marketPlace.getMarketItems(1);
+    // const resultSell: NFTItem = await marketPlace.getMarketItem(1);
     //   console.log(resultSell.toString())
   
 
@@ -182,7 +182,7 @@ describe("NFTMarket", function () {
   // it("Make a sell", async function () {
   //     const { marketItem, marketPlace, owner, addr1, addr2 } = await addItemToMarket();
 
-  //   const result: NFTItem = await marketPlace.getMarketItems(1);
+  //   const result: NFTItem = await marketPlace.getMarketItem(1);
 
   //   let listingPrice = await marketPlace.marketFee()
   //   listingPrice = listingPrice.toString()
@@ -199,7 +199,7 @@ describe("NFTMarket", function () {
   //   await expect(marketPlace.MarketSaleNFT(result.itemId))
   //     .to.be.revertedWith('Please provide appropriate price');
 
-  //   const resultListed: NFTItem = await marketPlace.getMarketItems(1);
+  //   const resultListed: NFTItem = await marketPlace.getMarketItem(1);
   //   console.log(resultListed.owner)
   //   console.log(marketPlace.address)
 

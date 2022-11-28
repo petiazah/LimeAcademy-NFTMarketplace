@@ -68,14 +68,6 @@ contract MarketPlace is ReentrancyGuard, Ownable {
         return _itemIds.current();
     }
 
-    function getMarketItems(uint256 _id)
-        public
-        view
-        returns (NFTMarketItem memory)
-    {
-        return (marketItems[_id]);
-    }
-
     function getMarketItem(uint256 _id)
         public
         view
@@ -136,8 +128,15 @@ contract MarketPlace is ReentrancyGuard, Ownable {
         require(msg.value == marketFee, "Need to pay market fee.");
 
         IERC721 nft = IERC721(nftContract);
+        address ownerOfToken = nft.ownerOf(tokenId);
+        address appr = nft.getApproved(tokenId);
+        console.log("ownerOfToken: %s",ownerOfToken);
+        console.log("current appr: %s",appr);
+
         if (nft.getApproved(tokenId) != address(this)) {
-            nft.setApprovalForAll(payable(address(this)), true);
+            console.log("not approved");
+            nft.setApprovalForAll(address(this), true);
+            console.log("approved");
         }
 
         nft.transferFrom(msg.sender, address(this), tokenId);
@@ -155,18 +154,27 @@ contract MarketPlace is ReentrancyGuard, Ownable {
 
         require(msg.value == price, "Please provide appropriate price");
 
+        console.log("Price - token %s - %s", price, tokenId);
+
+        console.log("seller %s transfer value %", marketItems[itemId].seller, msg.value);
+
         marketItems[itemId].seller.transfer(msg.value);
 
+       
+
         IERC721(marketItems[itemId].nftContract).transferFrom(
-            address(this),
+            payable(marketItems[itemId].owner),
             msg.sender,
             tokenId
         );
+
+        console.log("paid");
         marketItems[itemId].owner = payable(msg.sender);
+        marketItems[itemId].price = 0;
         marketItems[itemId].sold = true;
         _itemsSold.increment();
         
-        payable(address(this)).transfer(marketFee);
+        payable(msg.sender).transfer(marketFee);
 
         emit NFTItemAction(marketItems[itemId]);
     }
