@@ -16,8 +16,14 @@ contract MarketPlace is ReentrancyGuard, Ownable {
     Counters.Counter private _itemIds;
     Counters.Counter private _itemsSold;
     Counters.Counter private _collectionId;
+    address payable contractOwner;
     MarketItem marketItem;
-    Bidder bidder;
+
+    // Bidder bidder;
+
+    constructor() {
+        contractOwner = payable(msg.sender);
+    }
 
     struct Collection {
         string name;
@@ -35,20 +41,20 @@ contract MarketPlace is ReentrancyGuard, Ownable {
         bool sold;
     }
 
-    struct Bidder {
-        address payable bidder;
-        uint256 bid;
-        NFTMarketItem nft;
-    }
+    // struct Bidder {
+    //     address payable bidder;
+    //     uint256 bid;
+    //     NFTMarketItem nft;
+    // }
 
     mapping(uint256 => NFTMarketItem) public marketItems;
     mapping(uint256 => bool) private isPresent;
+    mapping(string => bool) private isPresentCollection;
     mapping(uint256 => Collection) public collections;
-    mapping(address => uint256) private pendingReturns;
+    // mapping(address => uint256) private pendingReturns;
 
     event NFTItemAction(NFTMarketItem);
-
-    event BidReceived(address bidder, uint256 amount);
+    // event BidReceived(address bidder, uint256 amount);
 
     modifier isOwner(address nftAddress, uint256 tokenId) {
         IERC721 nft = IERC721(nftAddress);
@@ -68,6 +74,23 @@ contract MarketPlace is ReentrancyGuard, Ownable {
         return _itemIds.current();
     }
 
+    function getMarketItems()
+        public
+        view
+        returns (NFTMarketItem[] memory)
+    {
+        uint256 currentIndex = 0;
+        NFTMarketItem[] memory items = new NFTMarketItem[](_itemIds.current());
+        for (uint256 i = 1; i <= _itemIds.current(); i++) {
+            
+                NFTMarketItem memory currentItem = marketItems[i];
+                items[currentIndex] = currentItem;
+                currentIndex += 1;
+            
+        }
+        return items;
+    }
+
     function getMarketItem(uint256 _id)
         public
         view
@@ -78,8 +101,10 @@ contract MarketPlace is ReentrancyGuard, Ownable {
 
     ////// Collections Logic
     function createCollection(string memory _name, string memory _description)
-        public
+        external
     {
+        require(!isPresentCollection[_name], "Collection name already exists");
+        isPresentCollection[_name] = true;
         _collectionId.increment();
         Collection memory collection = Collection(_name, _description);
         uint256 id = _collectionId.current();
@@ -89,8 +114,6 @@ contract MarketPlace is ReentrancyGuard, Ownable {
     function getCollectionsCount() public view returns (uint256) {
         return _collectionId.current();
     }
-
-    // isOwner(nftContract, tokenId, msg.sender
 
     function addNFTItemToMarket(
         address nftContract,
@@ -124,21 +147,10 @@ contract MarketPlace is ReentrancyGuard, Ownable {
         uint256 price
     ) public payable nonReentrant isOwner(nftContract, tokenId) {
         require(isPresent[tokenId], "Token not exist in the market.");
-        require(price > 0, "Price should be more than 0 PLZ.");
+        require(price > 0, "Price should be more than 0");
         require(msg.value == marketFee, "Need to pay market fee.");
 
         IERC721 nft = IERC721(nftContract);
-        address ownerOfToken = nft.ownerOf(tokenId);
-        address appr = nft.getApproved(tokenId);
-        console.log("ownerOfToken: %s",ownerOfToken);
-        console.log("address(this): %s",address(this));
-        console.log("current appr: %s",appr);
-
-        if (nft.getApproved(tokenId) != address(this)) {
-            console.log("not approved");
-            nft.setApprovalForAll(address(this), true);
-            console.log("approved");
-        }
 
         nft.transferFrom(msg.sender, address(this), tokenId);
 
@@ -148,20 +160,14 @@ contract MarketPlace is ReentrancyGuard, Ownable {
         emit NFTItemAction(marketItems[itemId]);
     }
 
-    function MarketSaleNFT(uint256 itemId) public payable nonReentrant{
-       
+    function MarketSaleNFT(uint256 itemId) public payable nonReentrant {
         uint256 price = marketItems[itemId].price;
         uint256 tokenId = marketItems[itemId].tokenId;
-
-        require(msg.value == price, "Please provide appropriate price");
-
-        console.log("Price - token %s - %s", price, tokenId);
-
-        console.log("seller %s transfer value %", marketItems[itemId].seller, msg.value);
+        console.log(msg.value);
+        console.log(price);
+        require(msg.value == price, "Need appropriate price.");
 
         marketItems[itemId].seller.transfer(msg.value);
-
-       
 
         IERC721(marketItems[itemId].nftContract).transferFrom(
             payable(marketItems[itemId].owner),
@@ -169,54 +175,12 @@ contract MarketPlace is ReentrancyGuard, Ownable {
             tokenId
         );
 
-        console.log("paid");
         marketItems[itemId].owner = payable(msg.sender);
         marketItems[itemId].price = 0;
         marketItems[itemId].sold = true;
-        _itemsSold.increment();
-        
-        payable(msg.sender).transfer(marketFee);
+
+        payable(contractOwner).transfer(marketFee);
 
         emit NFTItemAction(marketItems[itemId]);
     }
-
-    // function makeABid(address nftContract, uint256 tokenId) public payable {
-    //     addNFTItemToMarket(nftContract, tokenId);
-
-    //     if (msg.value != 0) {
-    //         pendingReturns[msg.sender] = msg.value;
-    //     }
-
-    //     bidder = Bidder(
-    //         payable(msg.sender),
-    //         msg.value,
-    //         marketItems[_itemIds.current()]
-    //     );
-
-    //     emit BidReceived(msg.sender, msg.value);
-    // }
-
-    // function acceptABit() public payable {
-    //     ///////////// TODO need to think of the Accepted bid
-    //     bidder.bidder.transfer(bidder.bid);
-    // }
-
-    // function refuseBit() public payable returns (bool) {
-    //     ///////// TODO think on the logic here
-
-    //     uint256 amount = pendingReturns[msg.sender];
-    //     if (amount > 0) {
-    //         // It is important to set this to zero because the recipient
-    //         // can call this function again as part of the receiving call
-    //         // before `send` returns.
-    //         pendingReturns[msg.sender] = 0;
-
-    //         if (!payable(msg.sender).send(amount)) {
-    //             // No need to call throw here, just reset the amount owing
-    //             pendingReturns[msg.sender] = amount;
-    //             return false;
-    //         }
-    //     }
-    //     return true;
-    // }
 }

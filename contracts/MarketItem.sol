@@ -7,8 +7,11 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 contract MarketItem is ERC721URIStorage {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
+     address contractAddress;
     
-    constructor() ERC721("Petiazah", "PLZ") {}
+    constructor(address marketplaceAddress) ERC721("Petiazah", "PLZ") {
+        contractAddress = marketplaceAddress;
+    }
 
     function mintNFT(string memory tokenURI)
         public
@@ -18,6 +21,7 @@ contract MarketItem is ERC721URIStorage {
         uint256 newItemId = _tokenIds.current();
         _mint(msg.sender, newItemId);
         _setTokenURI(newItemId, tokenURI);
+         setApprovalForAll(contractAddress, true);
         return newItemId;
     }
 }
