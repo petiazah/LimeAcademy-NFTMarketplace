@@ -167,6 +167,10 @@ contract MarketPlace is ReentrancyGuard, Ownable {
         console.log(price);
         require(msg.value == price, "Need appropriate price.");
 
+        marketItems[itemId].owner = payable(msg.sender);
+        marketItems[itemId].price = 0;
+        marketItems[itemId].sold = true;
+
         marketItems[itemId].seller.transfer(msg.value);
 
         IERC721(marketItems[itemId].nftContract).transferFrom(
@@ -175,9 +179,7 @@ contract MarketPlace is ReentrancyGuard, Ownable {
             tokenId
         );
 
-        marketItems[itemId].owner = payable(msg.sender);
-        marketItems[itemId].price = 0;
-        marketItems[itemId].sold = true;
+       
 
         payable(contractOwner).transfer(marketFee);
 
