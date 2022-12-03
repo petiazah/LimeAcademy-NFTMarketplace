@@ -102,6 +102,9 @@ describe("NFTMarket", function () {
     assert.equal(collection.name, "Dogs");
     await expect(marketPlace.connect(owner).createCollection("Dogs", "Dogs of the City"))
       .to.be.revertedWith('Collection name already exists');
+
+    const collections = await marketPlace.getCollections();
+    assert.equal(collections.length, 1);
   });
 
   it("Add NFT to market", async function () {

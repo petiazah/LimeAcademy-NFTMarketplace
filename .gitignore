@@ -12,7 +12,8 @@ typechain-types
 cache
 artifacts
 
-
+# constatnts
+FE/constatnts
 
 
 test/BookLibrary-Test.js

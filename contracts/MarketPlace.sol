@@ -115,6 +115,22 @@ contract MarketPlace is ReentrancyGuard, Ownable {
         return _collectionId.current();
     }
 
+    function getCollections() 
+    public 
+    view 
+    returns (Collection[] memory) {
+        uint256 currentIndex = 0;
+        Collection[] memory items = new Collection[](_collectionId.current());
+        for (uint256 i = 1; i <= _collectionId.current(); i++) {
+            
+                Collection memory currentItem = collections[i];
+                items[currentIndex] = currentItem;
+                currentIndex += 1;
+            
+        }
+        return items;
+    }
+
     function addNFTItemToMarket(
         address nftContract,
         uint256 tokenId,
@@ -167,11 +183,11 @@ contract MarketPlace is ReentrancyGuard, Ownable {
         console.log(price);
         require(msg.value == price, "Need appropriate price.");
 
-        marketItems[itemId].owner = payable(msg.sender);
         marketItems[itemId].price = 0;
         marketItems[itemId].sold = true;
 
         marketItems[itemId].seller.transfer(msg.value);
+        
 
         IERC721(marketItems[itemId].nftContract).transferFrom(
             payable(marketItems[itemId].owner),
@@ -180,7 +196,7 @@ contract MarketPlace is ReentrancyGuard, Ownable {
         );
 
        
-
+        marketItems[itemId].owner = payable(msg.sender);
         payable(contractOwner).transfer(marketFee);
 
         emit NFTItemAction(marketItems[itemId]);
