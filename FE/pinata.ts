@@ -1,15 +1,5 @@
 
-
-import { config as dotenvConfig } from "dotenv";
-const key: string | undefined = process.env.REACT_APP_PINATA_KEY;
-if (!key) {
-  throw new Error("Please set your PinataKey in a .env file");
-}
-
-const secret: string | undefined = process.env.REACT_APP_PINATA_SECRET;
-if (!secret) {
-  throw new Error("Please set your PinataKey in a .env file");
-}
+import { REACT_APP_PINATA_KEY, REACT_APP_PINATA_SECRET } from "./constants";
 
 
 const axios = require('axios');
@@ -21,8 +11,8 @@ export const uploadJSONToIPFS = async(JSONBody) => {
     return axios 
         .post(url, JSONBody, {
             headers: {
-                pinata_api_key: key,
-                pinata_secret_api_key: secret,
+                pinata_api_key: REACT_APP_PINATA_KEY,
+                pinata_secret_api_key: REACT_APP_PINATA_SECRET,
             }
         })
         .then(function (response) {
@@ -79,8 +69,8 @@ export const uploadFileToIPFS = async(file) => {
             maxBodyLength: 'Infinity',
             headers: {
                 'Content-Type': `multipart/form-data; boundary=${data._boundary}`,
-                pinata_api_key: key,
-                pinata_secret_api_key: secret,
+                pinata_api_key: REACT_APP_PINATA_KEY,
+                pinata_secret_api_key: REACT_APP_PINATA_SECRET,
             }
         })
         .then(function (response) {

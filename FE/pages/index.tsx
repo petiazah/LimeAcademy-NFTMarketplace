@@ -2,10 +2,13 @@ import { useWeb3React } from "@web3-react/core";
 import Head from "next/head";
 import Link from "next/link";
 import Account from "../components/Account";
+import AddItemToMarket from "../components/AddItemToMarket";
+import CreateCollection from "../components/CreateCollection";
+import MintNFT from "../components/MintNFT";
 import NativeCurrencyBalance from "../components/NativeCurrencyBalance";
 import TokenBalance from "../components/TokenBalance";
 import USLibrary from "../components/USLibrary";
-import { ALBT_TOKEN_ADDRESS, US_ELECTION_ADDRESS } from "../constants";
+import { ALBT_TOKEN_ADDRESS, MARKET_PLACE_ADDRESS, PETIAZAH_NFT_ADDRESS, US_ELECTION_ADDRESS } from "../constants";
 import useEagerConnect from "../hooks/useEagerConnect";
 
 function Home() {
@@ -27,6 +30,9 @@ function Home() {
           <Link href="/">
             <a>LimeAcademy-boilerplate</a>
           </Link>
+          <Link href="/collections">
+            <a>Collections</a>
+          </Link>
 
           <Account triedToEagerConnect={triedToEagerConnect} />
         </nav>
@@ -45,7 +51,9 @@ function Home() {
             <NativeCurrencyBalance />
 
             <TokenBalance tokenAddress={ALBT_TOKEN_ADDRESS} symbol="ALBT" />
-            <USLibrary contractAddress={US_ELECTION_ADDRESS} />
+            {/* <CreateCollection marketContractAddress={MARKET_PLACE_ADDRESS} /> */}
+            <AddItemToMarket marketContractAddress={MARKET_PLACE_ADDRESS} itemContractAddress = {PETIAZAH_NFT_ADDRESS}></AddItemToMarket>
+           
           </section>
         )}
       </main>
