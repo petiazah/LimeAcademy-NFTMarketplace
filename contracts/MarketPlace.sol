@@ -83,7 +83,7 @@ contract MarketPlace is ReentrancyGuard, Ownable {
         NFTMarketItem[] memory items = new NFTMarketItem[](_itemIds.current());
         for (uint256 i = 1; i <= _itemIds.current(); i++) {
             
-                NFTMarketItem memory currentItem = marketItems[i];
+                NFTMarketItem storage currentItem = marketItems[i];
                 items[currentIndex] = currentItem;
                 currentIndex += 1;
             
@@ -123,7 +123,7 @@ contract MarketPlace is ReentrancyGuard, Ownable {
         Collection[] memory items = new Collection[](_collectionId.current());
         for (uint256 i = 1; i <= _collectionId.current(); i++) {
             
-                Collection memory currentItem = collections[i];
+                Collection storage currentItem = collections[i];
                 items[currentIndex] = currentItem;
                 currentIndex += 1;
             
