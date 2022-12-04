@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import useMarketPlaceContract from "../hooks/useMarketPlaceContract";
 import { useWeb3React } from "@web3-react/core";
 import type { Web3Provider } from "@ethersproject/providers";
+import { SpinnerDotted } from 'spinners-react';
 
 type marketPlaceContract = {
     marketContractAddress: string;
@@ -90,7 +91,7 @@ return (
       <button onClick={getCollections}>Get Collections</button>
     </div>
     <div>{error}</div>
-    <div>{loading}</div>
+    <SpinnerDotted enabled={loading} />
     <div>
         <p>Created Collections:</p>
         <div>{createdCollections}</div>

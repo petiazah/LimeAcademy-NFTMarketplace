@@ -134,13 +134,14 @@ contract MarketPlace is ReentrancyGuard, Ownable {
     function addNFTItemToMarket(
         address nftContract,
         uint256 tokenId,
-        Collection memory collection
+        uint256 collectionId
     ) public payable nonReentrant {
         require(!isPresent[tokenId], "NFT already exists on the market!");
         isPresent[tokenId] = true;
 
         _itemIds.increment();
         uint256 itemId = _itemIds.current();
+        Collection memory collection = collections[collectionId];
 
         marketItems[itemId] = NFTMarketItem(
             itemId,

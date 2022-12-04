@@ -58,8 +58,8 @@ describe("NFTMarket", function () {
     const dogCollection = await marketPlace.collections(1);
     const catCollection = await marketPlace.collections(2);
 
-    await marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 1, dogCollection);
-    await marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 2, catCollection);
+    await marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 1, 1);
+    await marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 2, 2);
 
     return { marketItem, marketPlace, owner, addr1, addr2 }
 
@@ -115,14 +115,14 @@ describe("NFTMarket", function () {
     const dogCollection = await marketPlace.collections(1);
     const catCollection = await marketPlace.collections(2);
 
-    await marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 1, dogCollection);
+    await marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 1, 1);
     const itemId = await marketPlace.getMarketItemsCount();
     assert.equal(itemId, 1);
 
-    await expect(marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 2, dogCollection))
+    await expect(marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 2, 1))
       .to.emit(marketPlace, "NFTItemAction");
 
-    await expect(marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 1, catCollection))
+    await expect(marketPlace.connect(owner).addNFTItemToMarket(marketItem.address, 1, 2))
       .to.be.revertedWith('NFT already exists on the market!');
 
   });
