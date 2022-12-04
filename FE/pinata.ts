@@ -5,21 +5,51 @@ import { REACT_APP_PINATA_KEY, REACT_APP_PINATA_SECRET } from "./constants";
 const axios = require('axios');
 const FormData = require('form-data');
 
+// export const uploadJSONToIPFS = async(JSONBody) => {
+//     const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
+//     //making axios POST request to Pinata ⬇️
+//     return axios 
+//         .post(url, JSONBody, {
+//             headers: {
+//                 pinata_api_key: REACT_APP_PINATA_KEY,
+//                 pinata_secret_api_key: REACT_APP_PINATA_SECRET,
+//             }
+//         })
+//         .then(function (response) {
+//            return {
+//                success: true,
+//                pinataURL: "https://gateway.pinata.cloud/ipfs/" + response.data.IpfsHash
+//            };
+//         })
+//         .catch(function (error) {
+//             console.log(error)
+//             return {
+//                 success: false,
+//                 message: error.message,
+//             }
+
+//     });
+// };
+
 export const uploadJSONToIPFS = async(JSONBody) => {
     const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
     //making axios POST request to Pinata ⬇️
     return axios 
         .post(url, JSONBody, {
             headers: {
+                'Content-Type': 'application/json',
                 pinata_api_key: REACT_APP_PINATA_KEY,
                 pinata_secret_api_key: REACT_APP_PINATA_SECRET,
-            }
+            },
+            body: JSONBody
         })
         .then(function (response) {
            return {
                success: true,
-               pinataURL: "https://gateway.pinata.cloud/ipfs/" + response.data.IpfsHash
+               pinataURL: "https://gateway.pinata.cloud/ipfs/" + response.data.IpfsHash,
+               
            };
+           
         })
         .catch(function (error) {
             console.log(error)
@@ -30,6 +60,8 @@ export const uploadJSONToIPFS = async(JSONBody) => {
 
     });
 };
+
+
 
 export const uploadFileToIPFS = async(file) => {
     const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
