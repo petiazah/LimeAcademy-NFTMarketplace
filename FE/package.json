@@ -20,18 +20,23 @@
     "@web3-react/core": "^6.1.9",
     "@web3-react/injected-connector": "^6.0.7",
     "@web3-react/walletconnect-connector": "^6.2.8",
+    "ipfs-http-client": "^59.0.0",
     "next": "12.0.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "spinners-react": "^1.0.7",
     "swr": "^1.0.1"
   },
   "devDependencies": {
     "@typechain/ethers-v5": "^8.0.1",
     "@types/react": "^17.0.34",
+    "autoprefixer": "^10.4.13",
     "eslint": "7.32.0",
     "eslint-config-next": "12.0.2",
     "ethers": "^5.5.1",
+    "postcss": "^8.4.19",
     "react-router-dom": "^6.4.3",
+    "tailwindcss": "^3.2.4",
     "typechain": "^6.0.2",
     "typescript": "^4.4.4"
   }

@@ -24,9 +24,6 @@ function Home() {
 
       <header>
         <nav>
-          <Link href="/">
-            <a>LimeAcademy-boilerplate</a>
-          </Link>
 
           <Account triedToEagerConnect={triedToEagerConnect} />
         </nav>

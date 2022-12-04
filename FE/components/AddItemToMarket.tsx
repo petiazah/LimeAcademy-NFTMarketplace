@@ -30,7 +30,7 @@ const AddItemToMarket = ({ marketContractAddress, itemContractAddress }: contrac
     const [fileURL, setFileURL] = useState(null);
     const [tokenId, setTokenId] = useState<number | undefined>();
     const [addToMarket, setAddToMarket] = useState<number | undefined>();
-    
+
     const [collection, setCollection] = useState<Collection | undefined>();
     const [price, setPrice] = useState<string | undefined>();
     const [message, updateMessage] = useState('');
@@ -50,7 +50,7 @@ const AddItemToMarket = ({ marketContractAddress, itemContractAddress }: contrac
         setAddToMarket(input.target.value)
     }
 
-    
+
 
     const initDropdownList = async () => {
 
@@ -132,18 +132,18 @@ const AddItemToMarket = ({ marketContractAddress, itemContractAddress }: contrac
             const metadataURL = await uploadMetadataToIPFS(formParams, collection, fileURL);
             console.log(metadataURL)
             setLoading(false);
-           
+
             const id = await mint(metadataURL);
-             
+
             var collectionId = createdCollections.findIndex(i => i.name == collection.name);
-            await addMarket(id,collectionId);
-    
+            await addMarket(id, collectionId);
+
         } catch (e) {
 
         }
     }
 
-    const mint = async (metadataURL)=>{
+    const mint = async (metadataURL) => {
         setLoading(true);
         const tx = await marketItem.mintNFT(metadataURL);
         const id = await tx.wait(1);
@@ -154,8 +154,7 @@ const AddItemToMarket = ({ marketContractAddress, itemContractAddress }: contrac
         return idTok;
     }
 
-    const addMarket = async(tokenId, collectionId)=>
-    {
+    const addMarket = async (tokenId, collectionId) => {
         setLoading(true);
         console.log(`Add to market place ${tokenId} ${collection} ${marketItem.address} ${marketPlaceContract.address}`);
         var transaction = await marketPlaceContract.addNFTItemToMarket(marketItem.address, tokenId, collectionId);
@@ -168,23 +167,28 @@ const AddItemToMarket = ({ marketContractAddress, itemContractAddress }: contrac
 
         try {
 
-    
+            setLoading(true);
 
             var listingPrice = await marketPlaceContract.marketFee();
-            // console.log(listingPrice)
-            //actually create the NFT
-           
 
-            var currentId = await marketPlaceContract.getMarketItemsCount()
 
-            // alert("Successfully added your NFT!");
-            // updateMessage("");
+            console.log(listingPrice.toNumber());
+            console.log(addToMarket);
 
-            // const gasPriceWei = utils.parseUnits(price, 'gwei');
-            // var listTransaction = await marketPlaceContract.listNFTItemToMarket(currentId, marketItem.address, tokenId, price, { value: listingPrice })
-            // updateFormParams({ name: '', description: ''});
-            // alert("Successfully listed your NFT!");
-            // // window.location.replace("/")
+            var currentId = await marketPlaceContract.getMarketItemsCount();
+            console.log(currentId);
+            setTokenId(currentId.toNumber())
+
+            const nftToList = await marketPlaceContract.getMarketItem(addToMarket);
+          
+
+            const auctionPrice = utils.parseUnits(price, 'wei');
+            console.log(auctionPrice.toNumber());
+            
+            var listTransaction = await marketPlaceContract.listNFTItemToMarket(nftToList.itemId, nftToList.nftContract, nftToList.tokenId, price, { value: listingPrice.toNumber() })
+            await listTransaction.wait();
+
+            setLoading(false);
         }
         catch (e) {
             alert("Upload error" + e)
@@ -216,25 +220,27 @@ const AddItemToMarket = ({ marketContractAddress, itemContractAddress }: contrac
                         <input type={"file"} onChange={OnChangeFile}></input>
                     </div>
                     <div className="mb-4">
-                        <label className="block text-purple-500 text-sm font-bold mb-2" htmlFor="price">Price</label>
+                        <label className="block text-purple-500 text-sm font-bold mb-2" htmlFor="price">Price in wei</label>
                         <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="price" type="text"
                             placeholder="Price" onChange={priceSet} value={price}></input>
                     </div>
                     <br></br>
                     <div className="text-green text-center">{message}</div>
-
-                    <button onClick={mintNFT} className="font-bold mt-10 w-full bg-purple-500 text-white rounded p-2 shadow-lg">
-                        Mint NFT
-                    </button>
-                    <br></br>
-                    {/* <div className="mb-4">
-                        <label className="block text-purple-500 text-sm font-bold mb-2" htmlFor="name">Tocken Id</label>
-                        <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="name" type="text"
-                            placeholder="Name" onChange={addTokenToMarket} value={addToMarket}></input>
+                    <div>
+                        <button onClick={mintNFT} className="font-bold mt-10 w-full bg-purple-500 text-white rounded p-2 shadow-lg">
+                            Mint NFT
+                        </button>
                     </div>
-                    <button onClick={listNFT} className="font-bold mt-10 w-full bg-purple-500 text-white rounded p-2 shadow-lg">
-                        Add NFT to Market Place
-                    </button> */}
+
+                    <br></br>
+                    <div className="flex-container" >
+                       
+                        <input className="md-4" type="text"
+                            placeholder="List tokenId" onChange={addTokenToMarket} value={addToMarket}></input>
+                    </div>
+                    <button onClick={listNFT} className="">
+                        List NFT to Market Place
+                    </button>
                 </form>
             </div>
             <div>
@@ -242,6 +248,14 @@ const AddItemToMarket = ({ marketContractAddress, itemContractAddress }: contrac
                 <div>{tokenId}</div>
                 <SpinnerDotted enabled={loading} />
             </div>
+            <style jsx>{`
+        .flex-container {
+            display: flex;
+            justify-content: center;
+          }
+          
+         
+      `}</style>
         </div>
     )
 };

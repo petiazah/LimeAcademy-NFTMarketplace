@@ -7,7 +7,6 @@ import CreateCollection from "../components/CreateCollection";
 import MintNFT from "../components/MintNFT";
 import NativeCurrencyBalance from "../components/NativeCurrencyBalance";
 import TokenBalance from "../components/TokenBalance";
-import USLibrary from "../components/USLibrary";
 import { ALBT_TOKEN_ADDRESS, MARKET_PLACE_ADDRESS, PETIAZAH_NFT_ADDRESS, US_ELECTION_ADDRESS } from "../constants";
 import useEagerConnect from "../hooks/useEagerConnect";
 
@@ -27,9 +26,7 @@ function Home() {
 
       <header>
         <nav>
-          <Link href="/">
-            <a>LimeAcademy-boilerplate</a>
-          </Link>
+
           <Link href="/collections">
             <a>Collections</a>
           </Link>
@@ -39,12 +36,13 @@ function Home() {
       </header>
 
       <main>
-        <h1>
-          Welcome to{" "}
-          <a href="https://github.com/LimeChain/next-web3-boilerplate">
-            LimeAcademy-boilerplate
-          </a>
+      <h1>
+         This is NFT Market Place
         </h1>
+        <h2>
+         You can use this marketplace to create, buy and sell NFTs
+        </h2>
+        <div>Connect your wallet</div>
 
         {isConnected && (
           <section>
@@ -62,6 +60,7 @@ function Home() {
         nav {
           display: flex;
           justify-content: space-between;
+          
         }
 
         main {
