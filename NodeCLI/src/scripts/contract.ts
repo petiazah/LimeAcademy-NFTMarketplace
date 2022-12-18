@@ -3,7 +3,6 @@ const Provider = require('./Provider')
 const provider = new Provider()
 const {marketItemAddress, marketItemAbi} = require('./market_item')
 const {marketPlaceAddress, marketPlaceAbi} = require('./market_place')
-// const { ADDRESS, ABI } = require('./Metadata')
 class Contract {
 
   marketPlace: any;

@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-      "target": "ES6",
+      "target": "es2017",
       "module": "commonjs",
       "lib": ["es6"],
       "declaration": true,
@@ -10,7 +10,12 @@
       "types": ["node"],
       "esModuleInterop": true,
       "resolveJsonModule": true,
-      "skipLibCheck": true
+      "skipLibCheck": true,
+      "plugins": [
+        { 
+          "transform": "ts-transformer-keys/transformer"
+        }
+      ]
     },
     "include": [ ".env", "src"],
   }
